@@ -20,21 +20,3 @@ resource "aws_s3_bucket_versioning" "terraform_state" {
     status = "Enabled"
   }
 }
-
-# Terraform状態ロック用DynamoDBテーブル
-resource "aws_dynamodb_table" "terraform_lock" {
-  provider     = aws.tokyo
-  name         = "terraform-state-lock"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags = {
-    Name        = "terraform-state-lock"
-    Description = "Terraform state locking"
-  }
-}
