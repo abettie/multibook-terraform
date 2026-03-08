@@ -80,35 +80,3 @@ resource "aws_acm_certificate_validation" "image" {
   certificate_arn         = aws_acm_certificate.image.arn
   validation_record_fqdns = [for record in aws_route53_record.image_cert_validation : record.fqdn]
 }
-
-# 画像用ACM証明書(テスト用・バージニア北部)
-resource "aws_acm_certificate" "image_test" {
-  provider          = aws.virginia
-  domain_name       = var.image_domain_test
-  validation_method = "DNS"
-  tags = {
-    Name = "terra-acm-image-test"
-  }
-}
-
-resource "aws_route53_record" "image_test_cert_validation" {
-  provider = aws.tokyo
-  for_each = {
-    for dvo in aws_acm_certificate.image_test.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      type   = dvo.resource_record_type
-      record = dvo.resource_record_value
-    }
-  }
-  zone_id = data.aws_route53_zone.delegated.zone_id
-  name    = each.value.name
-  type    = each.value.type
-  records = [each.value.record]
-  ttl     = 300
-}
-
-resource "aws_acm_certificate_validation" "image_test" {
-  provider                = aws.virginia
-  certificate_arn         = aws_acm_certificate.image_test.arn
-  validation_record_fqdns = [for record in aws_route53_record.image_test_cert_validation : record.fqdn]
-}
