@@ -1,0 +1,5 @@
+zone_domain     = ""
+app_domain      = ""
+image_domain    = ""
+image_s3_bucket = ""
+public_key      = ""
