@@ -27,15 +27,3 @@ resource "aws_route53_record" "image_cloudfront" {
     evaluate_target_health = false
   }
 }
-
-# Route53レコード(画像ドメイン用CloudFront・テスト)
-resource "aws_route53_record" "image_test_cloudfront" {
-  zone_id = data.aws_route53_zone.delegated.zone_id
-  name    = var.image_domain_test
-  type    = "A"
-  alias {
-    name                   = aws_cloudfront_distribution.image_test.domain_name
-    zone_id                = aws_cloudfront_distribution.image_test.hosted_zone_id
-    evaluate_target_health = false
-  }
-}
