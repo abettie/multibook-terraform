@@ -1,7 +1,7 @@
 # 東京リージョン用のACM証明書
 resource "aws_acm_certificate" "tokyo" {
   provider          = aws.tokyo
-  domain_name       = var.sub_domain
+  domain_name       = var.app_domain
   validation_method = "DNS"
   tags = {
     Name = "terra-acm-tokyo"
@@ -35,7 +35,7 @@ resource "aws_route53_record" "tokyo_cert_validation" {
 # バージニアリージョン用のACM証明書
 resource "aws_acm_certificate" "virginia" {
   provider          = aws.virginia
-  domain_name       = var.sub_domain
+  domain_name       = var.app_domain
   validation_method = "DNS"
   tags = {
     Name = "terra-acm-virginia"

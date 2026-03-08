@@ -4,7 +4,7 @@ resource "aws_cloudfront_distribution" "web" {
   enabled             = true
   is_ipv6_enabled     = true
   comment             = "terra-cloudfront"
-  aliases             = [var.sub_domain]
+  aliases             = [var.app_domain]
   default_root_object = ""
   origin {
     domain_name = aws_lb.web.dns_name
@@ -19,7 +19,7 @@ resource "aws_cloudfront_distribution" "web" {
   logging_config {
     bucket          = aws_s3_bucket.log.bucket_regional_domain_name
     include_cookies = false
-    prefix          = "cloudfront-${var.sub_domain}/"
+    prefix          = "cloudfront-${var.app_domain}/"
   }
   default_cache_behavior {
     allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]

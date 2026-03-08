@@ -1,13 +1,13 @@
 # Route53ゾーンIDを自動取得(ゾーン名から)
 data "aws_route53_zone" "delegated" {
-  name         = var.delegated_domain
+  name         = var.zone_domain
   private_zone = false
 }
 
-# サブドメイン用Route53レコード(CloudFront用)
-resource "aws_route53_record" "sub_domain_cloudfront" {
+# アプリケーションドメイン用Route53レコード(CloudFront用)
+resource "aws_route53_record" "app_cloudfront" {
   zone_id = data.aws_route53_zone.delegated.zone_id
-  name    = var.sub_domain
+  name    = var.app_domain
   type    = "A"
   alias {
     name                   = aws_cloudfront_distribution.web.domain_name

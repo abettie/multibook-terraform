@@ -1,9 +1,9 @@
-variable "delegated_domain" {
+variable "zone_domain" {
   description = "The domain name to delegate"
   type        = string
 }
 
-variable "sub_domain" {
+variable "app_domain" {
   description = "The domain name to delegate"
   type        = string
 }

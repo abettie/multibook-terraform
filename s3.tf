@@ -1,7 +1,7 @@
 # CloudFrontログ保存用S3バケット
 resource "aws_s3_bucket" "log" {
   provider      = aws.tokyo
-  bucket        = "log-${var.sub_domain}"
+  bucket        = "log-${var.app_domain}"
   force_destroy = true
   tags = {
     Name = "terra-log"
