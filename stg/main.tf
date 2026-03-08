@@ -8,9 +8,8 @@ terraform {
     }
   }
 
-  # 事前に bootstrap/ で状態管理用S3バケットを作成してから bucket を設定してください
   backend "s3" {
-    bucket       = "terraform-state-prod-multibook"
+    bucket       = "terraform-state-stg-20c4f2da-888b-fb2b-9b8f-bac50c649cb7"
     key          = "terraform.tfstate"
     region       = "ap-northeast-1"
     encrypt      = true
@@ -23,7 +22,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment = "production"
+      Environment = "staging"
       ManagedBy   = "Terraform"
       Project     = "multibook"
     }
@@ -37,7 +36,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Environment = "production"
+      Environment = "staging"
       ManagedBy   = "Terraform"
       Project     = "multibook"
     }
@@ -48,7 +47,7 @@ module "hosted_zone" {
   source = "../modules/route53-hosted-zone"
 
   domain_name = var.zone_domain
-  environment = "production"
+  environment = "staging"
 }
 
 module "network" {
@@ -69,7 +68,7 @@ module "acm_tokyo" {
 
   domain_name     = var.app_domain
   route53_zone_id = module.hosted_zone.zone_id
-  environment     = "production"
+  environment     = "staging"
 }
 
 # バージニアリージョン用ACM証明書(Webアプリ CloudFront用)
@@ -82,7 +81,7 @@ module "acm_app_virginia" {
 
   domain_name     = var.app_domain
   route53_zone_id = module.hosted_zone.zone_id
-  environment     = "production"
+  environment     = "staging"
 }
 
 # バージニアリージョン用ACM証明書(画像 CloudFront用)
@@ -95,7 +94,7 @@ module "acm_image_virginia" {
 
   domain_name     = var.image_domain
   route53_zone_id = module.hosted_zone.zone_id
-  environment     = "production"
+  environment     = "staging"
 }
 
 module "compute" {
@@ -123,7 +122,7 @@ module "image_s3" {
   source = "../modules/s3-image"
 
   bucket_name = var.image_s3_bucket
-  environment = "production"
+  environment = "staging"
 }
 
 module "web_cloudfront" {
@@ -132,7 +131,7 @@ module "web_cloudfront" {
   domain_name     = var.app_domain
   alb_dns_name    = module.loadbalancer.alb_dns_name
   certificate_arn = module.acm_app_virginia.certificate_arn
-  environment     = "production"
+  environment     = "staging"
 }
 
 module "image_cloudfront" {
@@ -143,7 +142,7 @@ module "image_cloudfront" {
   s3_bucket_arn                  = module.image_s3.bucket_arn
   s3_bucket_regional_domain_name = module.image_s3.bucket_regional_domain_name
   certificate_arn                = module.acm_image_virginia.certificate_arn
-  environment                    = "production"
+  environment                    = "staging"
   cache_ttl                      = var.image_cache_ttl
 }
 

@@ -1,14 +1,12 @@
-# Terraform 構成手順
+# multibook-terraform
 
-## 構成概要
+multibook の AWS インフラを Terraform で管理するリポジトリです。
 
-このリポジトリは multibook の AWS インフラを Terraform で管理します。
-`infrastructure/` ディレクトリ以下に環境別のソースとモジュールが配置されています。
+## ディレクトリ構成
 
 ```
-infrastructure/
-├── bootstrap/   # Terraform state 用 S3 バケット作成
-├── modules/     # 共通モジュール
+/
+├── modules/             # 共通Terraformモジュール
 │   ├── acm-certificate/
 │   ├── cloudfront-alb/
 │   ├── cloudfront-s3/
@@ -19,106 +17,141 @@ infrastructure/
 │   ├── route53-records/
 │   ├── s3-image/
 │   └── security/
-├── stg/         # ステージング環境
-└── prod/        # 本番環境
+├── prod/                # 本番環境用 Terraformソース
+├── stg/                 # ステージング環境用 Terraformソース
+└── README.md
 ```
 
----
+## 環境構成
 
-## 事前準備
+本プロジェクトでは、以下の2つの環境を使用しています：
 
-### 1. Terraform のインストール
+- **本番環境 (Production)**: 本番用AWSアカウントで管理され、`prod/`配下のTerraformソースで構成
+- **ステージング環境 (Staging)**: 開発・検証用AWSアカウントで管理され、`stg/`配下のTerraformソースで構成
 
-[Terraformのインストール方法](./terraform-install.md) を参照してください。
+各環境は独立したAWSアカウントで運用され、Terraformによってインフラストラクチャがコード管理されています。
 
-### 2. AWS CLI 認証情報の設定
+## 技術スタック
 
-[AWS CLI認証情報の設定方法](./aws-credentials.md) を参照してください。
+### インフラストラクチャ
+- AWS (EC2, ALB, CloudFront, S3, Route53, ACM など)
+- Terraform
 
-### 3. Terraform state 用 S3 バケットの作成
+## セットアップ
 
-state ファイルを保存する S3 バケットを事前に作成します。
-`infrastructure/bootstrap/` は Terraform の remote backend を使わずにローカル state で動かします。
+### 前提条件
+- Terraformがインストールされていること（[インストール方法](./terraform-install.md)を参照）
+- 各環境のAWSアカウントへのアクセス権限が設定されていること
+- AWS CLIが設定されていること（[設定方法](./aws-credentials.md)を参照）
 
-```sh
-cd infrastructure/bootstrap
+### Terraform State管理
 
-# terraform.tfvars を作成（.gitignore 対象）
-cat > terraform.tfvars <<EOF
-stg_state_bucket_name  = "terraform-state-stg-<一意のID>"
-prod_state_bucket_name = "terraform-state-prod-<一意のID>"
-EOF
+TerraformのstateファイルはS3バケットで管理されています。
 
-terraform init
-terraform apply
+| 環境 | S3バケット | リージョン |
+|------|-----------|-----------|
+| ステージング | `terraform-state-stg-20c4f2da-888b-fb2b-9b8f-bac50c649cb7` | `ap-northeast-1` |
+| 本番 | `terraform-state-prod-20c4f2da-888b-fb2b-9b8f-bac50c649cb7` | `ap-northeast-1` |
+
+stateファイルは暗号化されて保存され、S3ネイティブのロック機構（`use_lockfile`）で同時実行を防止します。
+
+> **Note**: Terraform 1.10以降では、S3ネイティブのステートロック機能を使用しており、DynamoDBテーブルは不要です。
+
+#### 初回セットアップ（S3バケットの作成）
+
+初めてTerraformを使用する場合、stateファイル保存用のS3バケットを事前に作成する必要があります：
+
+```bash
+# ステージング環境用
+aws sso login --profile multibook-stg
+export AWS_PROFILE=multibook-stg && aws s3api create-bucket \
+  --bucket terraform-state-stg-20c4f2da-888b-fb2b-9b8f-bac50c649cb7 \
+  --region ap-northeast-1 \
+  --create-bucket-configuration LocationConstraint=ap-northeast-1
+
+export AWS_PROFILE=multibook-stg && aws s3api put-bucket-versioning \
+  --bucket terraform-state-stg-20c4f2da-888b-fb2b-9b8f-bac50c649cb7 \
+  --versioning-configuration Status=Enabled
+
+# 本番環境用
+aws sso login --profile multibook-prod
+export AWS_PROFILE=multibook-prod && aws s3api create-bucket \
+  --bucket terraform-state-prod-20c4f2da-888b-fb2b-9b8f-bac50c649cb7 \
+  --region ap-northeast-1 \
+  --create-bucket-configuration LocationConstraint=ap-northeast-1
+
+export AWS_PROFILE=multibook-prod && aws s3api put-bucket-versioning \
+  --bucket terraform-state-prod-20c4f2da-888b-fb2b-9b8f-bac50c649cb7 \
+  --versioning-configuration Status=Enabled
 ```
 
-作成後、`infrastructure/stg/main.tf` と `infrastructure/prod/main.tf` の backend ブロックにバケット名を設定してください。
+### インフラストラクチャのデプロイ
 
-### 4. Route53 ホストゾーンの先行構築と NS レコードの設定
+#### 初回デプロイ時の注意事項
 
-Route53 ホストゾーンは Terraform で作成しますが、**ドメインレジストラへの NS レコード登録は手動で行う必要があります**。
+SSL証明書の発行にはDNS検証が必要なため、以下の手順でデプロイを行ってください：
 
-手順：
+1. **ホストゾーンの先行作成**
 
-1. 対象環境の `terraform apply` を実行してホストゾーンを作成する
-2. `terraform output hosted_zone_name_servers` でネームサーバーを確認する
-3. お名前ドットコム等のドメイン管理画面で、上記ネームサーバーを NS レコードとして登録する
-4. DNS 伝播（最大 48 時間）を待ってから、ACM 証明書の検証が完了することを確認する
+   まず、Route53のホストゾーンのみを作成します：
+   ```bash
+   cd [環境]  # prod または stg
+   aws sso login --profile [プロファイル名]
+   export AWS_PROFILE=[プロファイル名] && terraform init
+   export AWS_PROFILE=[プロファイル名] && terraform plan -target=module.hosted_zone
+   export AWS_PROFILE=[プロファイル名] && terraform apply -target=module.hosted_zone
+   ```
 
-> **注意**: NS レコードが正しく設定されていないと ACM 証明書の DNS 検証がタイムアウトします。
+2. **ドメインレジストラでNSレコードの設定**
 
----
+   上記コマンド実行後に出力されるネームサーバー情報を、ドメインレジストラ側で設定してください。
+   DNSの伝播には数分から48時間程度かかる場合があります。
 
-## 変数ファイルの作成
+3. **残りのリソースのデプロイ**
 
-各環境の `terraform.tfvars` は `.gitignore` 対象です。
-初回セットアップ時は以下を参考に作成してください。
+   NSレコードの設定が完了し、DNSの伝播を確認したら、残りのリソースをデプロイします：
+   ```bash
+   export AWS_PROFILE=[プロファイル名] && terraform plan
+   export AWS_PROFILE=[プロファイル名] && terraform apply
+   ```
 
-**stg 環境 (`infrastructure/stg/terraform.tfvars`):**
-```hcl
-zone_domain     = "multibook-test.makedara.work"
-app_domain      = "app.multibook-test.makedara.work"
-image_domain    = "img.multibook-test.makedara.work"
-image_s3_bucket = "makedara-multibook"
-public_key      = "ssh-rsa AAAA..."
+#### ステージング環境
+(例)
+```bash
+cd stg
+aws sso login --profile multibook-stg
+export AWS_PROFILE=multibook-stg && terraform init
+export AWS_PROFILE=multibook-stg && terraform plan
+export AWS_PROFILE=multibook-stg && terraform apply
 ```
 
-**prod 環境 (`infrastructure/prod/terraform.tfvars`):**
-```hcl
-zone_domain     = "multibook.makedara.work"
-app_domain      = "app.multibook.makedara.work"
-image_domain    = "img.multibook.makedara.work"
-image_s3_bucket = "makedara-multibook-prod"
-public_key      = "ssh-rsa AAAA..."
+#### 本番環境
+(例)
+```bash
+cd prod
+aws sso login --profile multibook-prod
+export AWS_PROFILE=multibook-prod && terraform init
+export AWS_PROFILE=multibook-prod && terraform plan
+export AWS_PROFILE=multibook-prod && terraform apply
 ```
 
----
+### 変数ファイルの作成
 
-## 環境の操作
+各環境の `terraform.tfvars` は `.gitignore` 対象のため、`terraform.tfvars.sample` をコピーして作成してください。
 
-### ステージング環境
+```bash
+# ステージング環境
+cp stg/terraform.tfvars.sample stg/terraform.tfvars
 
-```sh
-cd infrastructure/stg
-terraform init
-terraform plan
-terraform apply
+# 本番環境
+cp prod/terraform.tfvars.sample prod/terraform.tfvars
 ```
 
-### 本番環境
-
-```sh
-cd infrastructure/prod
-terraform init
-terraform plan
-terraform apply
-```
-
----
+コピー後、各ファイルの値を環境に合わせて設定してください。
 
 ## 注意事項
 
-- ACM 証明書の DNS 検証には Route53 ホストゾーンへの NS レコード設定が必要です。
-- `stg/` と `prod/` はそれぞれ独立した Terraform state を持ちます。
-- `terraform.tfvars` には秘密情報（SSH 公開鍵など）が含まれるため `.gitignore` で管理外となっています。
+- 本番環境への変更は慎重に行ってください
+- Terraformの実行前には必ず`plan`で変更内容を確認してください
+- 機密情報（SSH公開鍵など）はリポジトリにコミットしないでください
+- `terraform.tfvars` には機密情報が含まれるため `.gitignore` で管理外となっています
