@@ -22,7 +22,7 @@ resource "aws_route53_record" "tokyo_cert_validation" {
       record = dvo.resource_record_value
     }
   }
-  zone_id = data.aws_route53_zone.delegated.zone_id
+  zone_id = aws_route53_zone.delegated.zone_id
   name    = each.value.name
   type    = each.value.type
   records = [each.value.record]
@@ -59,7 +59,7 @@ resource "aws_route53_record" "image_cert_validation" {
       record = dvo.resource_record_value
     }
   }
-  zone_id = data.aws_route53_zone.delegated.zone_id
+  zone_id = aws_route53_zone.delegated.zone_id
   name    = each.value.name
   type    = each.value.type
   records = [each.value.record]

@@ -1,12 +1,11 @@
-# Route53ゾーンIDを自動取得(ゾーン名から)
-data "aws_route53_zone" "delegated" {
-  name         = var.zone_domain
-  private_zone = false
+# Route53ホストゾーンを作成
+resource "aws_route53_zone" "delegated" {
+  name = var.zone_domain
 }
 
 # アプリケーションドメイン用Route53レコード(CloudFront用)
 resource "aws_route53_record" "app_cloudfront" {
-  zone_id = data.aws_route53_zone.delegated.zone_id
+  zone_id = aws_route53_zone.delegated.zone_id
   name    = var.app_domain
   type    = "A"
   alias {
@@ -18,7 +17,7 @@ resource "aws_route53_record" "app_cloudfront" {
 
 # Route53レコード(画像ドメイン用CloudFront・本番)
 resource "aws_route53_record" "image_cloudfront" {
-  zone_id = data.aws_route53_zone.delegated.zone_id
+  zone_id = aws_route53_zone.delegated.zone_id
   name    = var.image_domain
   type    = "A"
   alias {
