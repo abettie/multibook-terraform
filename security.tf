@@ -3,9 +3,6 @@ resource "aws_security_group" "default" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
   name     = "terra-default-sg"
-  tags = {
-    Name = "terra-default-sg"
-  }
 
   ingress {
     from_port = 0
@@ -27,9 +24,6 @@ resource "aws_security_group" "ec2" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
   name     = "terra-ec2-sg"
-  tags = {
-    Name = "terra-ec2-sg"
-  }
 
   ingress {
     from_port        = 22
@@ -59,9 +53,6 @@ resource "aws_security_group" "elb" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
   name     = "terra-elb-sg"
-  tags = {
-    Name = "terra-elb-sg"
-  }
 
   ingress {
     from_port        = 443

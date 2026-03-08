@@ -3,9 +3,6 @@ resource "aws_ec2_instance_connect_endpoint" "main" {
   provider           = aws.tokyo
   subnet_id          = aws_subnet.public_a.id
   security_group_ids = [aws_security_group.default.id]
-  tags = {
-    Name = "terra-ec2-ice"
-  }
 }
 
 # EC2用キーペア
@@ -13,9 +10,6 @@ resource "aws_key_pair" "main" {
   provider   = aws.tokyo
   key_name   = "terra-key"
   public_key = var.public_key
-  tags = {
-    Name = "terra-key"
-  }
 }
 
 # EC2インスタンス
@@ -34,7 +28,4 @@ resource "aws_instance" "web" {
     sudo systemctl enable nginx
     sudo systemctl start nginx
   EOF
-  tags = {
-    Name = "terra-ec2"
-  }
 }

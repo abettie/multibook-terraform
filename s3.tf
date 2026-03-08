@@ -3,9 +3,6 @@ resource "aws_s3_bucket" "log" {
   provider      = aws.tokyo
   bucket        = "log-${var.app_domain}"
   force_destroy = true
-  tags = {
-    Name = "terra-log"
-  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "log" {
@@ -26,9 +23,6 @@ resource "aws_s3_bucket" "image" {
   provider      = aws.tokyo
   bucket        = var.image_s3_bucket
   force_destroy = true
-  tags = {
-    Name = "terra-image"
-  }
 }
 
 resource "aws_s3_bucket_ownership_controls" "image" {

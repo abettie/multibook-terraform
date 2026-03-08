@@ -5,9 +5,6 @@ resource "aws_vpc" "main" {
   assign_generated_ipv6_cidr_block = true
   enable_dns_support               = true
   enable_dns_hostnames             = true
-  tags = {
-    Name = "terra-vpc"
-  }
 }
 
 # サブネットA
@@ -19,9 +16,6 @@ resource "aws_subnet" "public_a" {
   map_public_ip_on_launch         = false
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.main.ipv6_cidr_block, 8, 0)
   assign_ipv6_address_on_creation = true
-  tags = {
-    Name = "terra-subnet-a"
-  }
 }
 
 # サブネットC
@@ -33,36 +27,24 @@ resource "aws_subnet" "public_c" {
   map_public_ip_on_launch         = false
   ipv6_cidr_block                 = cidrsubnet(aws_vpc.main.ipv6_cidr_block, 8, 1)
   assign_ipv6_address_on_creation = true
-  tags = {
-    Name = "terra-subnet-c"
-  }
 }
 
 # インターネットゲートウェイ
 resource "aws_internet_gateway" "main" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
-  tags = {
-    Name = "terra-igw"
-  }
 }
 
 # Egress Only インターネットゲートウェイ
 resource "aws_egress_only_internet_gateway" "egress_only" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
-  tags = {
-    Name = "terra-egress-only-igw"
-  }
 }
 
 # ルートテーブル
 resource "aws_route_table" "public" {
   provider = aws.tokyo
   vpc_id   = aws_vpc.main.id
-  tags = {
-    Name = "terra-rtb"
-  }
 }
 
 # インターネットへのIPv4ルート

@@ -6,10 +6,6 @@ resource "aws_s3_bucket" "terraform_state" {
   # 誤って削除されないように保護（本番環境では true を推奨）
   force_destroy = true
 
-  tags = {
-    Name        = "terraform-state"
-    Description = "Terraform state storage"
-  }
 }
 
 # バージョニング有効化（状態ファイルの履歴を保持）
