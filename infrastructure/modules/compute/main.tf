@@ -1,25 +1,22 @@
 # EC2 Instance Connect Endpoint
 resource "aws_ec2_instance_connect_endpoint" "main" {
-  provider           = aws.tokyo
-  subnet_id          = aws_subnet.public_a.id
-  security_group_ids = [aws_security_group.default.id]
+  subnet_id          = var.subnet_id
+  security_group_ids = [var.default_sg_id]
 }
 
 # EC2用キーペア
 resource "aws_key_pair" "main" {
-  provider   = aws.tokyo
   key_name   = "terra-key"
   public_key = var.public_key
 }
 
 # EC2インスタンス
 resource "aws_instance" "web" {
-  provider                    = aws.tokyo
-  ami                         = "ami-027fff96cc515f7bc" // Amazon Linux 2023
+  ami                         = var.ami
   instance_type               = var.instance_type
-  subnet_id                   = aws_subnet.public_a.id
+  subnet_id                   = var.subnet_id
   associate_public_ip_address = false
-  vpc_security_group_ids      = [aws_security_group.default.id, aws_security_group.ec2.id]
+  vpc_security_group_ids      = [var.default_sg_id, var.ec2_sg_id]
   key_name                    = aws_key_pair.main.key_name
   user_data                   = <<-EOF
     #!/bin/bash
