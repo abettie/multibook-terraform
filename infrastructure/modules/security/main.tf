@@ -1,8 +1,7 @@
 # デフォルトセキュリティグループ(自身からの全トラフィックのみ許可)
 resource "aws_security_group" "default" {
-  provider = aws.tokyo
-  vpc_id   = aws_vpc.main.id
-  name     = "terra-default-sg"
+  vpc_id = var.vpc_id
+  name   = "terra-default-sg"
 
   ingress {
     from_port = 0
@@ -21,9 +20,8 @@ resource "aws_security_group" "default" {
 
 # EC2用セキュリティグループ
 resource "aws_security_group" "ec2" {
-  provider = aws.tokyo
-  vpc_id   = aws_vpc.main.id
-  name     = "terra-ec2-sg"
+  vpc_id = var.vpc_id
+  name   = "terra-ec2-sg"
 
   ingress {
     from_port        = 22
@@ -50,9 +48,8 @@ resource "aws_security_group" "ec2" {
 
 # ELB用セキュリティグループ
 resource "aws_security_group" "elb" {
-  provider = aws.tokyo
-  vpc_id   = aws_vpc.main.id
-  name     = "terra-elb-sg"
+  vpc_id = var.vpc_id
+  name   = "terra-elb-sg"
 
   ingress {
     from_port        = 443
