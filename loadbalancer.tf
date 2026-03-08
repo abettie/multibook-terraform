@@ -6,9 +6,6 @@ resource "aws_lb" "web" {
   load_balancer_type = "application"
   subnets            = [aws_subnet.public_a.id, aws_subnet.public_c.id]
   security_groups    = [aws_security_group.default.id, aws_security_group.elb.id]
-  tags = {
-    Name = "terra-elb"
-  }
 }
 
 # ELBターゲットグループ
@@ -26,9 +23,6 @@ resource "aws_lb_target_group" "web" {
     timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
-  }
-  tags = {
-    Name = "terra-tg"
   }
 }
 

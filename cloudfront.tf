@@ -42,9 +42,6 @@ resource "aws_cloudfront_distribution" "web" {
     }
   }
   price_class = "PriceClass_200"
-  tags = {
-    Name = "terra-cloudfront"
-  }
 }
 
 # CloudFront OAC(画像用S3バケット・本番)
@@ -109,9 +106,6 @@ resource "aws_cloudfront_distribution" "image" {
   }
   price_class = "PriceClass_200"
   depends_on  = [aws_acm_certificate_validation.image, aws_s3_bucket_acl.image]
-  tags = {
-    Name = "terra-image-cloudfront"
-  }
 }
 
 # CloudFrontキャッシュポリシー(1秒TTL)

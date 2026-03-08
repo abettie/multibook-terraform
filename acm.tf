@@ -3,9 +3,6 @@ resource "aws_acm_certificate" "tokyo" {
   provider          = aws.tokyo
   domain_name       = var.app_domain
   validation_method = "DNS"
-  tags = {
-    Name = "terra-acm-tokyo"
-  }
 }
 
 # 東京リージョン用ACM証明書のDNS検証
@@ -37,9 +34,6 @@ resource "aws_acm_certificate" "virginia" {
   provider          = aws.virginia
   domain_name       = var.app_domain
   validation_method = "DNS"
-  tags = {
-    Name = "terra-acm-virginia"
-  }
 }
 
 # バージニアリージョン用ACM証明書のDNS検証
@@ -54,9 +48,6 @@ resource "aws_acm_certificate" "image" {
   provider          = aws.virginia
   domain_name       = var.image_domain
   validation_method = "DNS"
-  tags = {
-    Name = "terra-acm-image"
-  }
 }
 
 resource "aws_route53_record" "image_cert_validation" {
