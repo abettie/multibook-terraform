@@ -5,6 +5,7 @@ resource "aws_lb" "web" {
   load_balancer_type = "application"
   subnets            = var.subnet_ids
   security_groups    = [var.default_sg_id, var.elb_sg_id]
+  ip_address_type    = "dualstack-without-public-ipv4"
 }
 
 # ELBターゲットグループ
