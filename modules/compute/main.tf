@@ -2,6 +2,7 @@
 resource "aws_ec2_instance_connect_endpoint" "main" {
   subnet_id          = var.subnet_id
   security_group_ids = [var.default_sg_id]
+  preserve_client_ip = false
 }
 
 # EC2用キーペア
