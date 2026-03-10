@@ -1,14 +1,32 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## 概要
 
 multibook の AWS インフラを Terraform で管理するリポジトリ。ステージング (`stg/`) と本番 (`prod/`) の2環境を、それぞれ独立した AWS アカウントで運用している。
 
-## よく使うコマンド
+## ディレクトリ構成
+.
+├── modules/
+│   ├── network/
+│   ├── security/
+│   ├── compute/
+│   └── ...
+├── stg/          # ステージング環境
+└── prod/         # 本番環境
+
+## バージョン
+- Terraform: >= 1.x.x
+- AWS Provider: ~> 5.x
+
+## コマンド
 
 ```bash
+# フォーマット (リポジトリ全体)
+terraform fmt -recursive
+
+# 構文検証 (各環境ディレクトリで実行)
+cd stg && terraform validate
+
 # ステージング環境
 cd stg
 aws sso login --profile multibook-stg
@@ -24,33 +42,24 @@ export AWS_PROFILE=multibook-prod && terraform plan
 export AWS_PROFILE=multibook-prod && terraform apply
 ```
 
-## tfvars の準備
-
-`terraform.tfvars` は `.gitignore` 対象なので、初回はサンプルからコピーして値を設定する：
-
-```bash
-cp stg/terraform.tfvars.sample stg/terraform.tfvars
-cp prod/terraform.tfvars.sample prod/terraform.tfvars
-```
-
 ## アーキテクチャ
 
 ### モジュール構成
 
-`modules/` 配下のモジュールを `stg/` と `prod/` から呼び出す構造。各環境の `main.tf` がルートモジュール。
+`modules/` 配下のモジュールを `stg/` と `prod/` から呼び出す構造。各環境の `main.tf` がルートモジュール。各モジュールは `main.tf` / `variables.tf` / `outputs.tf` の3ファイルで構成する。
 
 | モジュール | 役割 |
 |---|---|
-| `network` | VPC (IPv4/IPv6 dual-stack)、パブリックサブネット×2 (ap-northeast-1a/c)、IGW |
-| `security` | Security Group (default/EC2/ELB) |
-| `compute` | EC2 (nginx、パブリックIP無し、EC2 Instance Connect Endpoint経由でアクセス) |
-| `loadbalancer` | ALB (HTTPS終端、ACM証明書使用) |
-| `acm-certificate` | ACM証明書 (Route53 DNS検証) |
-| `cloudfront-alb` | CloudFront → ALB (Webアプリ用) |
-| `cloudfront-s3` | CloudFront → S3 (画像配信用) |
+| `network` | VPC、パブリックサブネット、IGW |
+| `security` | Security Group |
+| `compute` | EC2 |
+| `loadbalancer` | ALB |
+| `acm-certificate` | ACM証明書 |
+| `cloudfront-alb` | CloudFront → ALB |
+| `cloudfront-s3` | CloudFront → S3 |
 | `s3-image` | 画像保存用 S3 バケット |
 | `route53-hosted-zone` | Route53 ホストゾーン |
-| `route53-records` | Route53 Aレコード (CloudFront向け) |
+| `route53-records` | Route53 Aレコード |
 
 ### 通信フロー
 
@@ -69,6 +78,10 @@ CloudFront → ALB 間は IPv6 (HTTPS only, TLSv1.2)。EC2 はパブリック IP
 ### State 管理
 
 S3 バックエンド + ネイティブロック (`use_lockfile = true`、Terraform 1.10以降)。DynamoDB は不要。
+
+## 禁止事項
+- terraform apply を自動実行しない（plan まで）
+- シークレットをコードにハードコードしない
 
 ## 初回デプロイ時の注意
 
