@@ -33,6 +33,7 @@ resource "aws_cloudfront_distribution" "web" {
       https_port             = 443
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
+      ip_address_type        = "ipv6"
     }
   }
 
