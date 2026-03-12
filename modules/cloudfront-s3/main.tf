@@ -111,7 +111,7 @@ resource "aws_s3_bucket_policy" "image" {
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Action = ["s3:GetObject"]
+        Action   = ["s3:GetObject"]
         Resource = "${var.s3_bucket_arn}/*"
         Condition = {
           StringEquals = {
