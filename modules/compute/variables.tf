@@ -29,3 +29,8 @@ variable "ami" {
   type        = string
   default     = "ami-027fff96cc515f7bc" # Amazon Linux 2023 (ap-northeast-1)
 }
+
+variable "image_s3_bucket_arn" {
+  description = "ARN of the image S3 bucket for EC2 IAM policy"
+  type        = string
+}
