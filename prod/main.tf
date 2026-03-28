@@ -100,11 +100,12 @@ module "acm_image_virginia" {
 module "compute" {
   source = "../modules/compute"
 
-  subnet_id     = module.network.subnet_public_a_id
-  default_sg_id = module.security.default_sg_id
-  ec2_sg_id     = module.security.ec2_sg_id
-  public_key    = var.public_key
-  instance_type = var.instance_type
+  subnet_id           = module.network.subnet_public_a_id
+  default_sg_id       = module.security.default_sg_id
+  ec2_sg_id           = module.security.ec2_sg_id
+  public_key          = var.public_key
+  instance_type       = var.instance_type
+  image_s3_bucket_arn = module.image_s3.bucket_arn
 }
 
 module "loadbalancer" {
